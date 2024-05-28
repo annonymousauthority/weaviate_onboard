@@ -17,16 +17,17 @@ app = FastAPI()
 openai_api_key = os.getenv("OPENAI_APIKEY")
 wcs_demo_url = os.getenv("WCS_DEMO_URL")
 wcs_demo_admin_key = os.getenv("WCS_DEMO_ADMIN_KEY")
+headers = {"X-OpenAI-Api-Key":openai_api_key} 
+client = weaviate.Client(
+    url=wcs_demo_url,
+    auth_client_secret=weaviate.auth.AuthApiKey(
+        api_key=wcs_demo_admin_key
+    ),
+)
+cl = weaviate.connect_to_wcs(cluster_url=wcs_demo_url, auth_credentials=weaviate.auth.AuthApiKey(api_key=wcs_demo_admin_key), headers=headers)
 
 @app.on_event("startup")
 def onStartup():
-    headers = {"X-OpenAI-Api-Key":openai_api_key} 
-    client = weaviate.Client(
-        url=wcs_demo_url,
-        auth_client_secret=weaviate.auth.AuthApiKey(
-            api_key=wcs_demo_admin_key
-        ),
-    )
     if client.is_live():
         print("Connected to Weaviate successfully.")
         cl = weaviate.connect_to_wcs(cluster_url=wcs_demo_url, auth_credentials=weaviate.auth.AuthApiKey(api_key=wcs_demo_admin_key), headers=headers)
@@ -35,8 +36,6 @@ def onStartup():
 
 @app.on_event("shutdown")
 def onShutdown():
-    headers = {"X-OpenAI-Api-Key":openai_api_key} 
-    cl = weaviate.connect_to_wcs(cluster_url=wcs_demo_url, auth_credentials=weaviate.auth.AuthApiKey(api_key=wcs_demo_admin_key), headers=headers)
     cl.close()
 
 class SearchRequest(BaseModel):
@@ -44,8 +43,6 @@ class SearchRequest(BaseModel):
 
 @app.post("/performsearch")
 async def basicSearch(request: SearchRequest):
-    headers = {"X-OpenAI-Api-Key":openai_api_key} 
-    cl = weaviate.connect_to_wcs(cluster_url=wcs_demo_url, auth_credentials=weaviate.auth.AuthApiKey(api_key=wcs_demo_admin_key), headers=headers)
     res = performSearch(client=cl, query=request.query)
     return res
 
