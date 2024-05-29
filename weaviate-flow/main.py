@@ -3,16 +3,32 @@ import os
 import json
 from fastapi import FastAPI
 import uvicorn
+from fastapi.middleware.cors import CORSMiddleware
 from middleware.dataCollection import dataModel
 from middleware.loadData import importData
 from middleware.basicSearch import performSearch
 import asyncio
 from pydantic import BaseModel
 from dotenv import load_dotenv
-
+import middleware.infologger as logger
 # Load environment variables from .env file
 load_dotenv()
 app = FastAPI()
+
+origins = [
+    "http://localhost:3000",
+    "https://8000-01hyx63njjxbnwr3yyf23mkzdw.cloudspaces.litng.ai"
+]
+
+
+# Add CORS middleware to the FastAPI app
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 openai_api_key = os.getenv("OPENAI_APIKEY")
 wcs_demo_url = os.getenv("WCS_DEMO_URL")
@@ -43,8 +59,14 @@ class SearchRequest(BaseModel):
 
 @app.post("/performsearch")
 async def basicSearch(request: SearchRequest):
-    res = performSearch(client=cl, query=request.query)
-    return res
+    try:
+        res = performSearch(client=cl, query=request.query)
+        logger.info(f"Incoming request: {request}")
+        logger.info(f"Response: {res}")
+        return res
+    except Exception as e:
+        logger.error(f"Error occurred: {e}")
+        return {"error": str(e)}, 500
 
 @app.get("/")
 async def getStarted():
