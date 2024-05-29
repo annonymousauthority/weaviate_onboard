@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import blackberry from "@/public/blackberry.png";
 import durian from "@/public/durian-fruit.png";
 import fruit from "@/public/fruit.png";
@@ -8,14 +8,16 @@ import persimmon from "@/public/persimmon.png";
 import strawberry from "@/public/strawberry.png";
 import Image from "next/image";
 import axios from "axios";
+import LoaderSpinner from "./Loader-Comp";
 const fruitImages = {
-  0: { src: strawberry, alt: "strawberry fruit", name: "strawberries" },
-  1: { src: blackberry, alt: "blackberry fruit", name: "blackberries" },
-  2: { src: fruit, alt: "banana fruit", name: "bananas" },
-  3: { src: orange, alt: "orange fruit", name: "oranges" },
-  4: { src: persimmon, alt: "persimmon fruit", name: "persimmons" },
-  5: { src: durian, alt: "durian fruit", name: "durians" },
+  0: { src: strawberry, alt: "strawberry fruit", name: "Strawberry" },
+  1: { src: blackberry, alt: "blackberry fruit", name: "Blackberry" },
+  2: { src: fruit, alt: "banana fruit", name: "Banana" },
+  3: { src: orange, alt: "orange fruit", name: "Orange" },
+  4: { src: persimmon, alt: "persimmon fruit", name: "Persimmon" },
+  5: { src: durian, alt: "durian fruit", name: "Durian" },
 };
+
 export default function MixerComponent() {
   const [fruitCounts, setFruitCounts] = useState({
     0: 0,
@@ -26,6 +28,10 @@ export default function MixerComponent() {
     5: 0,
   });
   const [results, setResults] = useState([]);
+  const [mixing, setMixing] = useState(false);
+  const [typing, setTyping] = useState("");
+  const [benefits, setBenefits] = useState("");
+  const [funFact, setFunFact] = useState("");
 
   const incrementFruit = (fruitId) => {
     setFruitCounts((prevCounts) => ({
@@ -41,46 +47,124 @@ export default function MixerComponent() {
         (key) => `${fruitCounts[key] * 100} grams of ${fruitImages[key].name}`
       )
       .join(", ");
-
-    return summary ? `You've added ${summary}` : "No fruits added";
+    return summary ? `${summary}` : "No fruits added";
   };
-
-  async function mixFruit(fruitId) {
-    const resultsArray = [...results];
-    try {
-      const response = await axios.post(
-        "https://8000-01hyx63njjxbnwr3yyf23mkzdw.cloudspaces.litng.ai/performsearch",
-        { query: fruitImages[fruitId].name },
-        {
+  useEffect(() => {
+    setResults([]);
+  }, [benefits]);
+  const formatText = (inputText) => {
+    return inputText
+      .replace(/\*\*(.*?)\*\*/g, "<h3>$1</h3>")
+      .replace(/\n/g, "<br />");
+  };
+  const generatePrompt = async () => {
+    if (getSummary() !== "No fruits added") {
+      let PROMPT = `Provide the overal impact of freshly pressed: ${getSummary()}. Provide a short straight to the point summary only. Add 1 benefit and one drawback(if any) to drinking this`;
+      setMixing(true);
+      try {
+        const response = await fetch(process.env.NEXT_PUBLIC_LLAMAPROMPT_URL, {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
+          body: JSON.stringify({ prompt: PROMPT }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setBenefits(formatText(data[0].response));
+          setMixing(false);
+          generateFunFacts();
+        } else {
+          setMixing(false);
+          console.log("Error:", response.status);
         }
-      );
-      console.log(response);
-      if (response.status >= 200 && response.status < 300) {
-        console.log(response.data);
-        // Process the data as needed
+      } catch (error) {
+        console.log("Error:", error);
+      }
+    } else {
+      setBenefits("No Fruits Added");
+    }
+  };
+
+  async function generateFunFacts() {
+    let PROMPT = `Generate 1 fun fact about one of the fruits named in this text: ${getSummary()} return your answer in a string Don't add anything else to this object in your response. You can pick the fruit at random`;
+    try {
+      const response = await fetch(process.env.NEXT_PUBLIC_LLAMAPROMPT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt: PROMPT }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log(data[0].response);
+        setFunFact(data[0].response);
       } else {
         console.log("Error:", response.status);
       }
     } catch (error) {
       console.log("Error:", error);
     }
-    setResults(resultsArray);
+  }
+
+  async function mixFruit(fruitId) {
+    const resultsArray = [...results];
+    const existingEntry = resultsArray.find(
+      (result) => result.fruit === fruitImages[fruitId].name
+    );
+    if (!existingEntry) {
+      try {
+        const response = await fetch(
+          process.env.NEXT_PUBLIC_WEAVIATESEARCH_URL,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ query: fruitImages[fruitId].name }),
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          resultsArray.push({ fruit: fruitImages[fruitId].name, data: data });
+          setResults(resultsArray);
+        } else {
+          console.error("Error:", response.status);
+        }
+      } catch (error) {
+        console.error("Error:", error);
+      }
+    }
   }
   return (
-    <div className="h-screen flex flex-col items-center justify-start max-w-6xl mx-auto">
-      <div className="mt-12 w-full bg-gray-600 h-[200px] rounded-2xl p-6 text-white">
-        <h1>Fun Facts</h1>
+    <div className="h-screen flex flex-col items-center justify-start max-w-6xl mx-auto p-6">
+      <div className="mt-12 w-full md:w-3/4 bg-gray-600 h-[150px] rounded-2xl p-6 text-white">
+        <h1 className="text-2xl font-bold">Fun Facts</h1>
+        <span className="text-sm font-light">{funFact}</span>
       </div>
 
       <div className="flex flex-wrap justify-center items-center w-full mt-12 space-x-6">
-        <div className="w-full lg:w-[32%] h-full rounded-2xl bg-gray-600 flex flex-col justify-between items-start p-3">
+        <div className="w-full md:w-[48%] lg:w-[32%] h-full rounded-2xl bg-gray-600 flex flex-col justify-between items-start p-3">
           <div>
-            <h2 className="text-white font-extralight text-sm">
-              Fruits are all in 100grams
-            </h2>
+            <div className="w-full flex justify-between items-center">
+              <h2 className="text-white font-extralight text-sm">
+                Fruits are all in 100grams
+              </h2>
+              <button
+                type="button"
+                onClick={() => {
+                  setResults([]);
+                  setBenefits("");
+                }}
+                className="underline text-red-500 text-sm"
+              >
+                Clear Mixture
+              </button>
+            </div>
             <div className=" w-full bg-gray-800 rounded-2xl p-2 flex flex-wrap gap-3 justify-start ">
               <button
                 type="button"
@@ -169,9 +253,7 @@ export default function MixerComponent() {
               <span>Mix Summary</span>
               <button
                 type="button"
-                onClick={() => {
-                  console.log(results);
-                }}
+                onClick={() => generatePrompt()}
                 className="text-sm font-extralight text-blue-500 hover:text-blue-600 underline"
               >
                 Mix Fruit
@@ -180,7 +262,15 @@ export default function MixerComponent() {
             <span className="text-sm font-extralight">{getSummary()}</span>
           </div>
         </div>
-        <div className="w-full lg:w-[42%] h-[500px] rounded-2xl bg-gray-600 flex flex-col justify-center items-center"></div>
+        <div className="w-full md:w-[48%] overflow-y-auto h-[500px] py-3 rounded-2xl bg-gray-600 flex flex-col justify-center items-center">
+          {mixing ? (
+            <LoaderSpinner />
+          ) : (
+            <div className="text-white text-left p-6 h-[450px] overflow-y-scroll">
+              <span dangerouslySetInnerHTML={{ __html: benefits }}></span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
