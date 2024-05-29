@@ -133,10 +133,10 @@ export default function MixerComponent() {
           resultsArray.push({ fruit: fruitImages[fruitId].name, data: data });
           setResults(resultsArray);
         } else {
-          console.error("Error:", response.status);
+          console.log("Error:", response.status);
         }
       } catch (error) {
-        console.error("Error:", error);
+        console.log("Error:", error);
       }
     }
   }
