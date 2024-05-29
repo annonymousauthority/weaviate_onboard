@@ -1,8 +1,6 @@
 # Fruit Mixer
 
-![Project Image 1](path/to/first/image.jpg)
-
-![Project Image 2](path/to/second/image.jpg)
+![Project Image 1](weaviate-onboarding.png)
 
 ## Overview
 

@@ -72,6 +72,7 @@ export default function MixerComponent() {
 
         if (response.ok) {
           const data = await response.json();
+          console.log(data);
           setBenefits(formatText(data[0].response));
           setMixing(false);
           generateFunFacts();
