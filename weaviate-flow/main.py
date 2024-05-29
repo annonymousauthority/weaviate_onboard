@@ -73,7 +73,7 @@ async def basicSearch(request: SearchRequest):
         return res
     except Exception as e:
         error_logger.info(f"Error occurred: {e}")
-        return {"error": str(e)}, 500
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/")
 async def getStarted():
