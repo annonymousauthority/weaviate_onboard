@@ -38,4 +38,7 @@ Fruit Mixer is a user-friendly application that allows users to input various fr
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/fruit-mixer.git
+   git clone https://github.com/annonymousauthority/weaviate_onboard
+2. Run npm install in the frontend folder
+3. Add your environment variables for weaviateurl and llama3 url
+4. Backend code has to be hosted in a prod environment (weaviate-flow)
