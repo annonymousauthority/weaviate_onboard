@@ -10,10 +10,17 @@ from middleware.basicSearch import performSearch
 import asyncio
 from pydantic import BaseModel
 from dotenv import load_dotenv
-import middleware.infologger as logger
+from middleware.infologger import setup_logger
+from logging import getLogger
 # Load environment variables from .env file
 load_dotenv()
 app = FastAPI()
+
+setup_logger()
+
+debug_logger = getLogger("debug_logger")
+info_logger = getLogger("info_logger")
+error_logger = getLogger("error_logger")
 
 origins = [
     "http://localhost:3000",
@@ -61,11 +68,11 @@ class SearchRequest(BaseModel):
 async def basicSearch(request: SearchRequest):
     try:
         res = performSearch(client=cl, query=request.query)
-        logger.info(f"Incoming request: {request}")
-        logger.info(f"Response: {res}")
+        info_logger(f"Incoming request: {request}")
+        info_logger(f"Response: {res}")
         return res
     except Exception as e:
-        logger.error(f"Error occurred: {e}")
+        error_logger(f"Error occurred: {e}")
         return {"error": str(e)}, 500
 
 @app.get("/")

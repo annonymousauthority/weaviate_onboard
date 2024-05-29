@@ -1,19 +1,54 @@
-import logging
+import logging.config
 
-def configure_logger():
-    # Set the log level
-    logging.basicConfig(level=logging.INFO)
 
-    # Create a file handler
-    file_handler = logging.FileHandler('app.log')
-    file_handler.setLevel(logging.INFO)
-
-    # Create a formatter
-    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-    file_handler.setFormatter(formatter)
-
-    # Add the file handler to the root logger
-    logging.getLogger('').addHandler(file_handler)
-
-# Configure the logger when this module is imported
-configure_logger()
+def setup_logger():
+    logging.config.dictConfig(
+        {
+            "version": 1,
+            "formatters": {
+                "standard": {
+                    "format": "%(asctime)s [%(levelname)s] - %(message)s",
+                },
+            },
+            "handlers": {
+                "debug_file": {
+                    "class": "logging.handlers.RotatingFileHandler",
+                    "filename": "debug.log",
+                    "maxBytes": 100000,
+                    "backupCount": 5,
+                    "level": "DEBUG",
+                    "formatter": "standard",
+                },
+                "info_file": {
+                    "class": "logging.handlers.RotatingFileHandler",
+                    "filename": "info.log",
+                    "maxBytes": 100000,
+                    "backupCount": 5,
+                    "level": "INFO",
+                    "formatter": "standard",
+                },
+                "error_file": {
+                    "class": "logging.handlers.RotatingFileHandler",
+                    "filename": "error.log",
+                    "maxBytes": 100000,
+                    "backupCount": 5,
+                    "level": "ERROR",
+                    "formatter": "standard",
+                },
+            },
+            "loggers": {
+                "debug_logger": {
+                    "handlers": ["debug_file"],
+                    "level": "DEBUG",
+                },
+                "info_logger": {
+                    "handlers": ["info_file"],
+                    "level": "INFO",
+                },
+                "error_logger": {
+                    "handlers": ["error_file"],
+                    "level": "ERROR",
+                },
+            },
+        }
+    )
