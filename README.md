@@ -1,10 +1,11 @@
 # Fruit Mixer
 
 ![Project Image 1](weaviate-onboarding.png)
+![Project Image 1](screenshot.png)
 
 ## Overview
 
-Fruit Mixer is a user-friendly application that allows users to input various fruits and returns detailed information about those fruits. This project leverages modern tools and technologies to provide an intuitive and informative experience.
+Fruit Mixer is a user-friendly application that allows users to mix various fruits and returns detailed information about those fruits. This project leverages modern tools and technologies to provide an intuitive and informative experience.
 
 ## Tools and Technologies Used
 
