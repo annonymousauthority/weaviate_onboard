@@ -88,7 +88,7 @@ export default function MixerComponent() {
   };
 
   async function generateFunFacts() {
-    let PROMPT = `Generate 1 fun fact about one of the fruits named in this text: ${getSummary()} return your answer in a string Don't add anything else to this object in your response. You can pick the fruit at random`;
+    let PROMPT = `Generate 1 fun fact about one of the fruits named in this text: ${getSummary()} return your answer in a string Don't add anything else to this object in your response. You can pick the fruit at random. You can use information from this ${results} to give a more expert information on the mixture`;
     try {
       const response = await fetch(process.env.NEXT_PUBLIC_LLAMAPROMPT_URL, {
         method: "POST",
