@@ -68,11 +68,11 @@ class SearchRequest(BaseModel):
 async def basicSearch(request: SearchRequest):
     try:
         res = performSearch(client=cl, query=request.query)
-        info_logger(f"Incoming request: {request}")
-        info_logger(f"Response: {res}")
+        info_logger.info(f"Incoming request: {request}")
+        info_logger.info(f"Response: {res}")
         return res
     except Exception as e:
-        error_logger(f"Error occurred: {e}")
+        error_logger.info(f"Error occurred: {e}")
         return {"error": str(e)}, 500
 
 @app.get("/")
